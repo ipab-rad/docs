@@ -1,0 +1,18 @@
+ProxyCommand /usr/bin/corkscrew 127.0.0.1 3128 %h %p ~/.ssh/myauth
+
+Host github.com
+User git
+Port 22
+Hostname github.com
+IdentityFile "~/.ssh/gh_nantas"
+TCPKeepAlive yes
+IdentitiesOnly yes
+
+Host ssh.github.com
+User git
+Port 443
+Hostname ssh.github.com
+IdentityFile "~/.ssh/gh_nantas"
+TCPKeepAlive yes
+IdentitiesOnly yes
+
