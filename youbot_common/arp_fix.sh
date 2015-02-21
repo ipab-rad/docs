@@ -1,3 +1,5 @@
+# Copy this in /etc/ethers
+
 # soundwave
 sudo arp -s 192.168.106.9 c0:4a:00:1c:3e:5e
 # megatron
