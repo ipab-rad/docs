@@ -17,6 +17,7 @@ class Server(object):
         # TODO make them selectable
         self.key = os.path.expanduser("~/.ssh/github_rsa")
         self.user = 'rad_admin'
+        self.mountpoints = ['/', '/data/one', '/data/two']
 
     def ssh_connect(self):
         try:
@@ -80,13 +81,56 @@ class Server(object):
                 stats[cpu][k] = float(tmp[idx])
             return stats
 
+    def get_df(self):
+        stdin, stdout, stderr = self.client.exec_command(
+            'export LC_LANG=C && unset LANG && df -l -T -k -P')
+        dfs = {}
+
+        for line in stdout:
+            line = line.strip()
+
+            if not line or line.startswith('Filesystem'):
+                continue
+
+            tmp = [s for s in line.split(' ') if s]
+
+            _type = tmp[1]
+            if _type in ['tmpfs', 'devtmpfs', 'iso9660']:
+                continue
+
+
+            to_check = True
+            if self.mountpoints:
+                to_check = False
+                for mnt in self.mountpoints:
+                    if tmp[6].startswith(mnt):
+                        to_check = True
+
+
+            if not to_check:
+                continue
+
+            fs =  tmp[0]
+            size = int(tmp[2])*1024
+            used = int(tmp[3])*1024
+            avail = int(tmp[4])*1024
+            used_pct = int(tmp[5][:-1]) # we remove the %
+            mounted = ' '.join(tmp[6:])
+            dfs[mounted] = {'fs':fs, 'size':size, 'used':used,
+                            'avail':avail, 'used_pct':used_pct}
+
+        return dfs
+
+
 class CheckServers(object):
 
     def __init__(self, names):
         self.names = names
         self.servers = {}
         self.active_servers = []
+        self.s_unit = "MB"
 
+        self.warning, self.critical = schecks.get_warn_crit('75%', '90%')
         for name in self.names:
             self.servers[name] = Server(name)
 
@@ -131,7 +175,43 @@ class CheckServers(object):
                     # We remove the % of the %usr for example in k
                     perfdata.append('%s_%s=%.2f%%' % (s_cpu, k[1:], j))
             print("CPU stats for %s:" % name)
-            print("\t%s" % ('\n\t'.join(perfdata)))
+            print((Fore.YELLOW + "\t%s" + Style.RESET_ALL)
+                  % ('\n\t'.join(perfdata)))
+
+    def _convert_to(self, unit, value):
+        UNITS= {'B': 0,
+                'KB': 1,
+                'MB': 2,
+                'GB': 3,
+                'TB': 4}
+        power = 0
+        if unit in UNITS:
+            power = UNITS[unit]
+        return round(float(value)/(1024**power), power)
+
+    def disk_stats(self):
+        print(Fore.WHITE + "##### Disk stats" + Style.RESET_ALL)
+        for name in self.active_servers:
+
+            dfs = self.servers[name].get_df()
+            perfdata = ''
+
+            for (mount, df) in dfs.iteritems():
+                size =  self._convert_to(self.s_unit ,df['size'])
+                used =  self._convert_to(self.s_unit,df['used'])
+                used_pct =  df['used_pct']
+
+                _size_warn = (self._convert_to(self.s_unit,df['size']
+                                               * float( self.warning)/100))
+                _size_crit = (self._convert_to(self.s_unit,df['size']
+                                               * float( self.critical)/100))
+
+                if perfdata != "":
+                    perfdata += "\n"
+                perfdata += ('\t%s : %s (%s%% of %s%s)'
+                             % (mount, used, used_pct, size, self.s_unit))
+            print(("Disk stas for %s" + Fore.YELLOW) % name)
+            print(("%s" + Style.RESET_ALL) % (perfdata))
 
 def main():
 
@@ -144,6 +224,7 @@ def main():
     cs.connect()
     cs.check_uptime()
     cs.cpu_stats()
+    cs.disk_stats()
 
 if __name__ == "__main__":
     main()
