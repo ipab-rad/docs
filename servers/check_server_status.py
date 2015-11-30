@@ -32,15 +32,11 @@ class Server(object):
                              " > /dev/null 2>&1")
         return response == 0
 
-    def get_updtime(self):
-
+    def uptime(self):
         raw = r"""cat /proc/uptime"""
         stdin, stdout, stderr = self.client.exec_command(raw)
         line = [l for l in stdout][0].strip()
         uptime, _ = tuple([int(float(v)) for v in line.split(' ')])
-
-        self.client.close()
-
         return uptime
 
     def get_time(self):
@@ -51,21 +47,12 @@ class CheckServers(object):
     def __init__(self, names):
         self.names = names
         self.servers = {}
+        self.active_servers = []
 
         for name in self.names:
             self.servers[name] = Server(name)
 
-    def connect_all(self):
-        print(Fore.WHITE + "##### SSH connection" + Style.RESET_ALL)
-        for name in self.names:
-            print("Trying to connect via ssh to %s..." % name, end="")
-            self.servers[name].ssh_connect()
-            if self.servers[name].client:
-                print(Fore.GREEN + "DONE" + Style.RESET_ALL)
-            else:
-                print(Fore.RED + "FAILED" + Style.RESET_ALL)
-
-    def ping_all(self):
+    def ping(self):
         print(Fore.WHITE + "##### Servers reachability" + Style.RESET_ALL)
         for name in self.names:
             print("Trying to ping %s..." % name, end="")
@@ -74,7 +61,23 @@ class CheckServers(object):
             else:
                 print(Fore.RED + "FAILED" + Style.RESET_ALL)
 
+    def connect(self):
+        print(Fore.WHITE + "##### SSH connection" + Style.RESET_ALL)
+        for name in self.names:
+            print("Trying to connect via ssh to %s..." % name, end="")
+            self.servers[name].ssh_connect()
+            if self.servers[name].client:
+                self.active_servers.append(name)
+                print(Fore.GREEN + "DONE" + Style.RESET_ALL)
+            else:
+                print(Fore.RED + "FAILED" + Style.RESET_ALL)
 
+    def check_uptime(self):
+        print(Fore.WHITE + "##### Uptime" + Style.RESET_ALL)
+        for name in self.active_servers:
+            up = int(self.servers[name].uptime()) / 60
+            print(("Uptime for %s: " + Fore.YELLOW +
+                   "%d minutes" + Style.RESET_ALL) % (name, up))
 
 
 def main():
@@ -84,8 +87,9 @@ def main():
                        "dali.inf.ed.ac.uk",
                        "goya.inf.ed.ac.uk"])
 
-    cs.ping_all()
-    cs.connect_all()
+    cs.ping()
+    cs.connect()
+    cs.check_uptime()
 
 if __name__ == "__main__":
     main()
