@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Requires colorama
-
 from __future__ import print_function
 import os
 
@@ -40,28 +38,18 @@ class Server(object):
         return uptime
 
     def get_mpstat(self):
-        # We are looking for such lines:
-        #Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-        #Average:     all    1.51    0.00    0.50    0.25    0.00    0.00    0.00    0.00   97.74
-        #Average:       0    1.01    0.00    0.00    0.00    0.00    0.00    0.00    0.00   98.99
-        #Average:       1    1.01    0.00    0.00    0.00    0.00    0.00    0.00    0.00   98.99
-        #Average:       2    2.00    0.00    1.00    0.00    0.00    0.00    0.00    0.00   97.00
-        #Average:       3    2.00    0.00    1.00    0.00    0.00    0.00    0.00    0.00   97.00
-
-        # Beware of the export!
-        stdin, stdout, stderr = self.client.exec_command('export LC_LANG=C && unset LANG && mpstat -P ALL 1 1')
+        stdin, stdout, stderr = self.client.exec_command(
+            'export LC_LANG=C && unset LANG && mpstat -P ALL 1 1')
         stats = {}
-
-        pos = {'%usr':-1, '%nice':-1, '%sys':-1, '%iowait':-1, '%irq':-1, '%soft':-1, '%steal':-1, '%guest':-1, '%idle':-1}
+        pos = {'%usr':-1, '%nice':-1, '%sys':-1, '%iowait':-1,
+               '%irq':-1, '%soft':-1, '%steal':-1, '%guest':-1,
+               '%idle':-1}
 
         for line in stdout:
             line = line.strip()
-            # By pass the firt line, we already know about it
             if not line:
                 continue
 
-            # Some mpstat version got various index for %usr or %idle, so parse the line and find the index
-            # directly
             if 'CPU' in line and (r'%usr' in line or r'%user' in line):
                 elts = [e for e in line.split(' ') if e]
                 for k in pos:
@@ -78,21 +66,18 @@ class Server(object):
 
             if not line.startswith('Average:'):
                 continue
-
-            # Ok we do not want for the first one with title
             if line.startswith('CPU'):
                 continue
 
             tmp = [e for e in line.split(' ') if e]
-            cpu = tmp[1]#.pop(0)
-            # Beware of _sys, not sys that is a module!
-            stats[cpu] = {'%usr':0, '%nice':0, '%sys':0, '%iowait':0, '%irq':0, '%soft':0, '%steal':0, '%guest':0, '%idle':0}
-
+            cpu = tmp[1]
+            stats[cpu] = {'%usr':0, '%nice':0, '%sys':0, '%iowait':0,
+                          '%irq':0, '%soft':0, '%steal':0, '%guest':0,
+                          '%idle':0}
             for (k, idx) in pos.iteritems():
                 if idx == -1:
                     continue
                 stats[cpu][k] = float(tmp[idx])
-
             return stats
 
 class CheckServers(object):
