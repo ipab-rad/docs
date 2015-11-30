@@ -209,7 +209,8 @@ class CheckServers(object):
                 if perfdata != "":
                     perfdata += "\n"
                 perfdata += ('\t%s : %s%s (%s%% of %s%s)'
-                             % (mount, used, sizeused_pct, size, self.s_unit))
+                             % (mount, used, self.s_unit, used_pct, size,
+                                self.s_unit))
             print(("Disk stas for %s" + Fore.YELLOW) % name)
             print(("%s" + Style.RESET_ALL) % (perfdata))
 
