@@ -114,5 +114,6 @@ install_dependencies () {
         libgtest-dev \
         libgfortran-4.8-dev \
         libboost-all-dev \
-        libxml2-dev
+        libxml2-dev \
+        cpufrequtils
 }
