@@ -25,34 +25,16 @@ install_ag () {
         print_bl "Installing ag\n"
         sudo apt-get install -y automake pkg-config libpcre3-dev zlib1g-dev \
             liblzma-dev
-        git clone https://github.com/ggreer/the_silver_searcher
-        cd the_silver_searcher
+        git clone https://github.com/ggreer/the_silver_searcher ~/the_silver_searcher
+        cd ~/the_silver_searcher
         ./build.sh
         sudo make install
-        cd ..
-        sudo rm -rf the_silver_searcher
+        cd -
+        sudo rm -rf ~/the_silver_searcher
     else
         print_yl "ag is already installed\n"
     fi
 }
-
-install_xcape () {
-    if [ -z "$(which xcape)" ] ; then
-        print_bl "Installing xcape\n"
-        sudo apt-get install git gcc make pkg-config libx11-dev \
-            libxtst-dev libxi-dev
-        mkdir xcape
-        cd xcape
-        git clone https://github.com/alols/xcape.git .
-        make
-        sudo make install
-        cd ..
-        rm -rf xcape
-    else
-        print_yl "xcape is already installed\n"
-    fi
-}
-
 
 install_gcc () {
     if [ -z "$(which gcc-4.8)" ] ; then
@@ -78,19 +60,23 @@ install_gcc () {
 }
 
 install_git () {
-    sudo apt-get install python-software-properties
-    sudo add-apt-repository ppa:git-core/ppa
-    sudo apt-get update
-    sudo apt-get install git
+    if [ -z "$(which git)" ] ; then
+        sudo apt-get install python-software-properties
+        sudo add-apt-repository ppa:git-core/ppa
+        sudo apt-get update
+        sudo apt-get install git
+    else
+        print_yl "Git is already installed\n"
+    fi
 }
 
 install_ros () {
     if [ ! -d /opt/ros/indigo/ ] ; then
         print_bl "Installing ROS\n"
         sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu \
-$(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+        $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
         sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net \
-            --recv-key 0xB01FA116
+                         --recv-key 0xB01FA116
         sudo apt-get update
         sudo apt-get install ros-indigo-desktop-full python-wstool \
              python-rosinstall ros-indigo-multimaster-fkie python-wstool \
@@ -110,8 +96,8 @@ install_python () {
 
 install_dependencies () {
     install_git
-    install_ag
     install_gcc
+    install_ag
     install_ros
     install_python
     install_packages \
@@ -128,5 +114,5 @@ install_dependencies () {
         libgtest-dev \
         libgfortran-4.8-dev \
         libboost-all-dev \
-        libxml2-dev \
+        libxml2-dev
 }
