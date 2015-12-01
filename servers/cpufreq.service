@@ -1,9 +1,0 @@
-[Unit]
-Description=Set all cores to max frequency
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/cpufreq-set -r -g performance
-
-[Install]
-WantedBy=multi-user.target
