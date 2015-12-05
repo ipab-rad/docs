@@ -3,6 +3,13 @@
 # Requires fping 
 #   (sudo apt-get install fping)
 
+if [ $(dpkg-query -W -f='${Status}' fping 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    echo "The script requires the package 'fping'. To install it: "
+    echo "sudo apt-get install fping"
+    exit
+fi
+
 set -u
 
 starting=100
