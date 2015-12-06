@@ -115,5 +115,6 @@ install_dependencies () {
         libgfortran-4.8-dev \
         libboost-all-dev \
         libxml2-dev \
-        cpufrequtils
+        cpufrequtils \
+        squid
 }
