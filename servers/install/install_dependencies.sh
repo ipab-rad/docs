@@ -78,7 +78,7 @@ install_ros () {
         sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net \
                          --recv-key 0xB01FA116
         sudo apt-get update
-        sudo apt-get install ros-indigo-desktop-full python-wstool \
+        sudo apt-get install ros-indigo-ros-base python-wstool \
              python-rosinstall ros-indigo-multimaster-fkie python-wstool \
              ros-indigo-vision-opencv ros-indigo-vision-visp \
              ros-indigo-openni2-camera ros-indigo-openni2-launch \
