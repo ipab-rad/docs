@@ -15,7 +15,7 @@ set -u
 starting=100
 
 counter=$starting
-while [ $counter -le 165 ]
+while [ $counter -le 163 ]
 do
     camera="inspacecam$counter.inf.ed.ac.uk"
     echo -n "Testing $camera..."
